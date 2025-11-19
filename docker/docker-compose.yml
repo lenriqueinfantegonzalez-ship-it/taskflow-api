@@ -1,0 +1,45 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:15 # Imagen de PostgreSQL
+    container_name: taskflow_db
+    restart: always
+    environment:
+      POSTGRES_USER: taskflow_user
+      POSTGRES_PASSWORD: taskflow_pass
+      POSTGRES_DB: taskflow_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql # Mapea tu script SQL
+      - postgres_data:/var/lib/postgresql/data
+
+  adminer:
+    image: adminer # Imagen de Adminer (interfaz web de DB)
+    container_name: taskflow_adminer
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db # Asegura que la base de datos se levante antes que Adminer
+
+  api:
+    build:
+      context: ../ # El contexto es la carpeta raíz del proyecto (taskflow-api)
+      dockerfile: ./docker/Dockerfile # Ubicación de tu Dockerfile
+    container_name: taskflow_api
+    ports:
+      - "8081:8081" # Exposición del puerto de Spring Boot
+    environment:
+      # Conexión a la base de datos (IMPORTANTE: usa 'db' como HOST)
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/taskflow_db
+      SPRING_DATASOURCE_USERNAME: taskflow_user
+      SPRING_DATASOURCE_PASSWORD: taskflow_pass
+      # Configuración de JPA para crear/actualizar tablas
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update 
+    depends_on:
+      - db # Asegura que la DB esté lista antes de iniciar la API
+
+volumes:
+  postgres_data:
