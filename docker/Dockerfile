@@ -1,18 +1,22 @@
-# Usa una imagen base de Java optimizada para Spring Boot
-FROM eclipse-temurin:21-jdk-alpine
+# ----------------------------------------------------
+# Stage 1: Build the application
+# ----------------------------------------------------
+# Using Maven image to build the JAR so you don't have to run 'mvn package' manually
+FROM maven:3.9.5-eclipse-temurin-17-alpine AS build
+WORKDIR /app
+COPY pom.xml .
+COPY src ./src
+# Skip tests to speed up the build in this context
+RUN mvn clean package -DskipTests
 
-# **LÍNEA AÑADIDA PARA ROMPER LA CACHÉ**
-# Esto fuerza a Docker a ignorar la caché de las capas subsiguientes cada vez.
-ARG CACHE_BREAKER=1.0
+# ----------------------------------------------------
+# Stage 2: Run the application
+# ----------------------------------------------------
+FROM eclipse-temurin:17-jre-alpine
+WORKDIR /app
+# Copy only the built JAR from the previous stage
+COPY --from=build /app/target/*.jar app.jar
 
-# Argumento para el nombre del JAR (usamos un comodín para capturar el nombre con la versión)
-ARG JAR_FILE=target/*.jar
+EXPOSE 8080
 
-# Copia el JAR compilado desde el host al contenedor, llamándolo 'app.jar'
-COPY ${JAR_FILE} app.jar
-
-# Expone el puerto por defecto de la API (8081 según tu docker-compose)
-EXPOSE 8081
-
-# Comando para ejecutar la aplicación
-ENTRYPOINT ["java", "-jar", "/app.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]

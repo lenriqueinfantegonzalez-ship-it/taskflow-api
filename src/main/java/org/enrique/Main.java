@@ -1,10 +1,17 @@
 package org.enrique;
 
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
+/**
+ * Clase principal de la aplicación TaskFlow API.
+ * La anotación @SpringBootApplication es crucial para que
+ * Spring Boot configure automáticamente el servidor web (Tomcat)
+ * y escanee los componentes de la aplicación.
+ */
+@SpringBootApplication
 public class Main {
+
     public static void main(String[] args) {
         SpringApplication.run(Main.class, args);
     }
